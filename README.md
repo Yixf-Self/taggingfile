@@ -19,14 +19,14 @@ Symbolic link is the solution to disk usage and file consistency.
 Details
 -------
 
-1. File organization:
+- File organization:
 
     - The hierarchic directories in current path countain targets files.
 
     - Every file in the directory would be paired with a tag file,
     for example, "a.txt" is paired with "a.txt.tag". 
     
-2. Tag:
+- Tag:
 
     - Tag file countains tags in multline. If no tag file given
     or no tags found in tag file. The file will be categorized 
@@ -34,13 +34,13 @@ Details
     
     - Hierarchic tag is supported. e.g, "Tag 2, Important".
 
-3. This script should be excuted in same path with the directory.
+- This script should be excuted in same path with the directory.
 
-4. File suffix (optional) is for filter of the files.
+- File suffix (optional) is for filter of the files.
 
-5. Directories with name of tags will be created in current path.
+- Directories with name of tags will be created in current path.
 
-6. The symlink use relative path. Unlinked symlinks will NOT be 
+- The symlink use relative path. Unlinked symlinks will NOT be 
     removed every excution for security unless -renew option is specified.
 
 
@@ -61,11 +61,11 @@ Usage
 Example
 ------
 
-1. tagging pdf files in pdfs directory
+- tagging pdf files in pdfs directory
 
     taggingfile -d pdfs -s .pdf
 
-2. tagging all the file in current directory
+- tagging all the file in current directory
 
     taggingfile
 
