@@ -14,8 +14,7 @@ Function : Cataloging files by tags (Only for *nix right now!!!)
 Author   : Wei Shen <shenwei356\@gmail.com> <http://shenwei.me>
 Website  : https://github.com/shenwei356/$program
 Created  : 2014-07-03
-Update   : 2014-07-11 fix a serious bug that could delete the directory in name
-                      of a tag.
+Update   : 2014-07-12
 
 Usage: $program [options] [directory ...]
 
@@ -191,7 +190,7 @@ sub get_tags($) {
     if ( not -e $tag_file ) {    # no tag file
         open FH, ">", $tag_file
             or die "fail to write file $tag_file. $!\n";
-        print FH ". $!\n";
+        print FH "$default_tag\n";
         close FH;
         return [$default_tag];
     }
