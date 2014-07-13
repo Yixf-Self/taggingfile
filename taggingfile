@@ -5,37 +5,44 @@ use File::Path qw(make_path remove_tree);
 use File::Find;
 use File::Basename;
 
-my $program = "taggingfile";
 my $usage = <<USAGE;
 
-$program
+taggingfile
 
 Function : Cataloging files by tags (Only for *nix right now!!!)
 Author   : Wei Shen <shenwei356\@gmail.com> <http://shenwei.me>
-Website  : https://github.com/shenwei356/$program
+Website  : https://github.com/shenwei356/taggingfile
 Created  : 2014-07-03
 Update   : 2014-07-12
 
-Usage: $program [options] [directory ...]
+Usage: taggingfile [options] [directory ...]
 
 Options:
-    -h                   Print usage
-    -help                Print usage and details
+
+    -h                   Print usage.
+    -help                Print usage and details.
     -s --suffix PATTERN  File suffix for filter of the files, 
                          cases ignored. [.*]
     -p --prefix STRING   Tag directory prefix ["_TAG_"]
-    -renew               Attention! It will delete and recreate the
-                         directory of all tags.
+    -clear               Remove all the tag directories.
+    -renew               Remove and recreate all the tags directories.
 
 
-Use "$program --help" for usage and details
+Use "taggingfile --help" for usage and details.
 
-Example:
-    1) tagging pdf files in pdfs directory
-    $program -d pdfs -s .pdf
+Examples:
 
-    2) tagging all the file in current directory
-    $program
+1. tagging all the file in current directory
+
+    taggingfile
+
+2. when big changes happen, for example, file or tag deleted.
+
+    taggingfile -renew
+
+3. tagging pdf files in pdfs directory
+
+    taggingfile -d pdfs -s .pdf
 
 USAGE
 
@@ -43,65 +50,94 @@ my $detail = <<DETAIL;
 
 Motivation:
 
-    I simply cataloged publication PDF files by storing them in different 
-    directories which stands for different categories. However some
-    publiction belong to several fields. It made me crazy for cataloging
-    them.
+I simply cataloged articles PDF files by storing them in different 
+directories which stands for different categories. However some
+articles belong to several fields. It made me crazy for cataloging
+them.
 
-    It's not a good practice to copy it to different directories, because it
-    will occupy more disk space and the modify only act for one file.
+It's not a good practice to copy them to different directories, 
+because it will occupy more disk space and the modify only act for
+one copy of the file.
 
-    Symbolic link is the solution to disk usage and file consistency.
+Symbolic link is a good solution for low disk usage and file consistency.
 
-Details:
+How:
 
-    1) File organization:
-         a) The hierarchic directories in current path countain targets files.
-         b) Every file in the directory would be paired with a tag file,
-            for example, "a.txt" is paired with "a.txt.tag". 
-    2) Tag:
-         a) Tag file countains tags in multline. If no tag file given
-            or no tags found in tag file. The file will be categorized 
-            as "Uncategorized".
-         b) Hierarchic tag is supported. e.g, "Tag 2, Important".
-    3) This script should be excuted in same path with the directory.
-    4) File suffix (optional) is for filter of the files.
-    5) Directories with name of tags will be created in current path.
-    6) The symlink use relative path. Unlinked symlinks will NOT be 
-       removed every excution for security unless -renew option is specified.
+- File organization:
+
+    - The hierarchic directories in current path countain the targets files.
+
+    - Every file in the directory would be paired with a tag file,
+        for example, "a.txt" is paired with "a.txt.tag". 
+- Tag:
+
+    - Tag file countains tags in multline. If no tag file given
+        or no tags found in tag file. The file will be categorized 
+        as "uncategorized".
+
+    - Hierarchic tag is supported, e.g. "Tag, Important", directory tree 
+        "Tag/Important" will be created.
+
+- This script should be excuted in same path with the directory.
+
+- File suffix (optional) is for filter of the files.
+
+- Directories with name of tags will be created in current path.
+
+- The symlink uses relative path. Unlinked symlinks will NOT be 
+   removed every excution for security unless -renew option is specified.
 
 DETAIL
 
-my ( $h, $help, $suffix, $prefix, $renew )
-    = ( undef, undef, ".*", "_TAG_", undef );
+my ( $h, $help, $suffix, $prefix, $renew, $clear )
+    = ( undef, undef, ".*", "_TAG_", undef, undef );
+
+# for saving the tag directory prefixes for renew
+my $tag_prefix_history_file = ".tag_prefix_history";
+my $prefixes                = {};
 
 GetOptions(
     'h'          => \$h,
     'help'       => \$help,
     'suffix|s=s' => \$suffix,
-    "prefix|p=s" => \$prefix,
-    'renew'      => \$renew
+    'prefix|p=s' => \$prefix,
+    'renew'      => \$renew,
+    'clear'      => \$clear
     )
     or die qq(
-Use "$program -h"     for usage
-Use "$program --help" for usage and details
+Use "taggingfile -h"    for usage
+Use "taggingfile -help" for usage and details
 
 );
 
 die $usage if $h;
 die "$usage\n$detail" if $help;
+die "Prefix length should not be greater than 3. Your input: $prefix\n"
+    unless length $prefix >= 3;
 
 my @dirs = @ARGV;
 
 @dirs = glob "*" if @dirs == 0;
 
+$prefix .= "_";
 @dirs = grep { -d and not /^\.+/ and not /^$prefix/ } @dirs;
 
-# get_file_list
+if ( -e $tag_prefix_history_file ) {
+    $prefixes = &get_tag_prefix_history($tag_prefix_history_file);
+}
+
+# delete and recreate directories for all tags.
+if ($renew) {
+    &clear_tag_directories($prefixes);
+}
+elsif ($clear) {
+    &clear_tag_directories($prefixes);
+    exit 0;
+}
+
+# get file list
 my $files = [];
 for my $dir (@dirs) {
-
-    # get file list
     push @$files, @{
         &get_file_list(
             $dir,
@@ -117,33 +153,62 @@ for my $dir (@dirs) {
     };
 }
 
-# read tags
-my $file_tags = {};                         # avoid compute repeatly
-my $all_tags  = {};
-for my $file (@$files) {
-    my $tags = &get_tags($file);
-
-    $$file_tags{$file} = $tags;
-
-    for my $tag (@$tags) {                  # for renew
-        $$all_tags{$tag}++;
-    }
-}
-
-# delete and recreate directories for all tags.
-if ($renew) {
-    for my $tag ( keys %$all_tags ) {
-        $tag = "$prefix$tag";
-        if ( -e $tag and -d $tag ) {
-            remove_tree($tag) or die "fail to remove directory: $tag. $!\n";
-        }
-    }
-}
-
 # create symlink
 for my $file (@$files) {
-    my $tags = $$file_tags{$file};
+    my $tags = &get_tags($file);
     &create_symlink( $file, $tags );
+}
+
+# save the tag directory prefixes for renew
+$$prefixes{$prefix}++;
+&save_tag_prefix_history( $tag_prefix_history_file, $prefixes );
+
+sub clear_tag_directories(/%) {
+    my ($prefixes) = @_;
+    my @dirs = grep { -d and not /^\./ } glob "*";
+    my @tag_directories = ();
+    for my $dir (@dirs) {
+        for my $prefix ( keys %$prefixes ) {
+            if ( $dir =~ /^$prefix/ ) {
+                push @tag_directories, $dir;
+            }
+        }
+    }
+
+    # remove old tag directories
+    for my $dir (@tag_directories) {
+        remove_tree($dir) or die "fail to remove directory: $dir. $!\n";
+    }
+
+    # reset
+    $prefixes = {};
+    &save_tag_prefix_history( $tag_prefix_history_file, $prefixes );
+}
+
+sub get_tag_prefix_history($) {
+    my ($file) = @_;
+    my $prefixes = {};
+    open FH, "<", $file
+        or die "fail to open file: $file. $!\n";
+    while (<FH>) {
+        s/\r?\n//g;
+        s/^\s+//;
+        s/\s+$//;
+        next if $_ eq "";
+        $$prefixes{$_}++;
+    }
+    close FH;
+    return $prefixes;
+}
+
+sub save_tag_prefix_history($/%) {
+    my ( $file, $prefixes ) = @_;
+    open FH, ">", $file
+        or die "fail to write file: $file. $!\n";
+    for my $prefix ( sort keys %$prefixes ) {
+        print FH "$prefix\n";
+    }
+    close FH;
 }
 
 sub create_symlink($/@) {
@@ -204,13 +269,13 @@ sub get_tags($) {
         s/[\/\\]+//g;
         next if $_ eq "";
 
-        $_ = join "/", split( /,\s+/, $_ );
+        $_ = join "/", split( /,\s*/, $_ );
 
-        push @$tags, lc $_; # change to lowercase
+        push @$tags, lc $_;    # change to lowercase
     }
     close FH;
 
-    if ( @$tags == 0 ) {    # no tags
+    if ( @$tags == 0 ) {       # no tags
         return [$default_tag];
     }
     return $tags;
