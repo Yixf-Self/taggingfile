@@ -3,6 +3,16 @@ taggingfile
 
 Cataloging files by tags (Only for *nix right now!!!)
 
+Prerequisites
+-------------
+
+taggingfile is a Perl script, and it only use standard modules:
+
+    use Getopt::Long;
+    use File::Path qw(make_path remove_tree);
+    use File::Find;
+    use File::Basename;
+
 Motivation
 ----------
  
