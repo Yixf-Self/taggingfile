@@ -57,6 +57,7 @@ How
 
     - Every file in the directory would be paired with a tag file,
         for example, "a.txt" is paired with "a.txt.tag". 
+
 - Tag:
 
     - Tag file countains tags in multline. If no tag file given
@@ -73,7 +74,7 @@ How
 - Directories with name of tags will be created in current path.
 
 - The symlink uses relative path. Unlinked symlinks will NOT be 
-   removed every excution for security unless -renew option is specified.
+    removed every excution for security unless -renew option is specified.
 
 Usage
 -----
