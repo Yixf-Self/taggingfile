@@ -124,6 +124,8 @@ $prefix .= "_";
 
 if ( -e $tag_prefix_history_file ) {
     $prefixes = &get_tag_prefix_history($tag_prefix_history_file);
+} else {
+    $$prefixes{$prefix}++;
 }
 
 # delete and recreate directories for all tags.
