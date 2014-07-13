@@ -3,6 +3,27 @@ taggingfile
 
 Cataloging files by tags (Only for *nix right now!!!)
 
+Snapshot
+--------
+
+![Snapshot](snapshot.jpeg)
+
+The snapshot shows the file tree after excuting taggingfile.
+"pdf" contain my reference pdf files. "_TAG__fontier" ("_TAG__ 
+is the tag directories prefix") and "_TAG__to read" is the tag directories
+containing symbolic links to my pdf files and 
+paired tag files.
+
+Note that, "2014-05 Science - Stop codon reassignments in the wild.pdf"
+has a hierarchic tag "fontier, bio", so the symbolic link is in path 
+"_TAG__fontier/bio". "2014 Improved genome inference in the MHC using 
+a population reference graph" is tagged as "to read" and "frontier",
+so we can read it by different tags. dirsize also show the low disk usage
+of the tag directories which only contain symbolic links.
+
+If I have review the files in "_TAG__to read", I can just modify the
+tag file, and run "taggingfile -renew" to update.
+
 Prerequisites
 -------------
 
