@@ -88,23 +88,33 @@ Usage
         -s --suffix PATTERN  File suffix for filter of the files, 
                              cases ignored. [.*]
         -p --prefix STRING   Tag directory prefix ["_TAG_"]
+        -f --file            Handle files.
+        -d --dir             Handle directories.
+        -n --depth  INT      Maximum search depth.
         -clear               Remove all the tag directories.
         -renew               Remove and recreate all the tags directories.
-
+    
+    -f or/and -d should be specified.
+    
 Examples
 --------
 
-1. tagging all the file in current directory
+1. Recursively tagging all the files in current directories, 
 
-    taggingfile
+    taggingfile -f 
 
-2. when big changes happen, for example, file or tag deleted.
+2. When big changes happen, for example, file or tag deleted.
 
-    taggingfile -renew
+    taggingfile -f -renew
 
-3. tagging pdf files in pdfs directory
+3. Recursively tagging pdf files in "pdfs" directory
 
-    taggingfile -d pdfs -s .pdf
+    taggingfile -f -s .pdf pdf
+
+4. Only tagging directories of **first level** in directory "soft" and "soft2" .
+
+    taggingfile -d -n 1 soft soft2
+
 
 Copyright
 --------
