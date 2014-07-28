@@ -22,7 +22,7 @@ so we can read it by different tags. dirsize also show the low disk usage
 of the tag directories which only contain symbolic links.
 
 If I have review the files in "_TAG__to read", I can just modify the
-tag file, and run "taggingfile -renew" to update.
+tag file, and run "taggingfile -f -renew" to update.
 
 Prerequisites
 -------------
@@ -43,7 +43,7 @@ articles belong to several fields. It made me crazy for cataloging
 them.
 
 It's not a good practice to copy them to different directories, 
-because it will occupy more disk space and the modify only act for
+because it will occupy more disk space and the modification only act for
 one copy of the file.
 
 Symbolic link is a good solution for low disk usage and file consistency.
