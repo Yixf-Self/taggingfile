@@ -13,7 +13,7 @@ Function : Cataloging files by tags (Only for *nix right now!!!)
 Author   : Wei Shen <shenwei356\@gmail.com> <http://shenwei.me>
 Website  : https://github.com/shenwei356/taggingfile
 Created  : 2014-07-03
-Update   : 2014-07-26
+Update   : 2014-08-14
 
 Usage: taggingfile [options] [directory ...]
 
@@ -328,7 +328,16 @@ sub get_file_list {
 
     # filter is a subroutine to filter a file
     my ( $dir, $filter, $depth ) = @_;
+    $dir =~ s/\/+/\//g;
+    $dir =~ s/\/$//;
+
     $depth = 1 << 30 unless defined $depth;
+    unless ( $depth =~ /^\d+$/ and $depth > 0 ) {
+        warn "depth should be positive integer\n";
+        return [];
+    }
+    print "$dir\n";
+    my $depth0 = $dir =~ tr/\//\//;
 
     my $files  = [];
     my $wanted = sub {
@@ -336,7 +345,7 @@ sub get_file_list {
         return if $_ eq $dir;
 
         # check depth
-        return if $File::Find::name =~ tr/\//\// > $depth;
+        return if $File::Find::name =~ tr/\//\// - $depth0 > $depth;
 
         if ( &$filter($_) ) {
             push @$files, $File::Find::name;
